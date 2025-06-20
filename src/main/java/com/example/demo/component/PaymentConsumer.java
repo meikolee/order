@@ -95,10 +95,10 @@ public class PaymentConsumer {
         // 模拟：记录日志
         log.info("[业务] 已处理成功订单: {} 金额: {}", orderId);
 
-
-
         // 查找最新的支付记录
         Payment payment = paymentService.findByOrderId(orderId);
+
+        // 最新的状态是SUCCESS 则入账
 
         kafkaProducerService.sendPayLog(payment);
 
