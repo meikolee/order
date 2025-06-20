@@ -47,17 +47,23 @@ public class PaymentController {
         if (payment == null) {
             return ResponseEntity.badRequest().body(orderId+" : 订单号不存在");
         }
+        // 如果是已支付状态，直接返回
+        if ("PAID".equals(payment.getStatus())) {
+            return ResponseEntity.ok("订单已支付，无需重复支付");
+        }
+
+
         payment.setStatus("PAID"); // 更新支付状态为已完成
         try {
             // 调用服务处理支付
             paymentRecordService.updateStatus(orderId, payment.getStatus());
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Payment processing failed: " + e.getMessage());
+            return ResponseEntity.status(500).body("订单处理失败 : " + e.getMessage());
         }
 
         // 这里可以添加实际的支付处理逻辑
         paymentPublisher.publishPayment(payment);
-        return ResponseEntity.ok("Payment processed successfully");
+        return ResponseEntity.ok("订单支付成功，订单号: " + orderId);
     }
 
 }
