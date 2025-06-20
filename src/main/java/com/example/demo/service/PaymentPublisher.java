@@ -19,6 +19,13 @@ public class PaymentPublisher {
         rabbitTemplate.convertAndSend("payment.exchange","payment.process",payment);
     }
 
+    // 发布到成功队列
+    public void publishPaymentSuccess(String orderId) {
+        // 将支付信息发送到 RabbitMQ 成功队列
+        log.info("[MQ] 发布支付成功信息到 RabbitMQ 队列: {}", orderId);
+        rabbitTemplate.convertAndSend("payment.exchange","payment.success.process",orderId);
+    }
+
     /**
      * 发布支付信息到 RabbitMQ 队列，使用延迟队列
      * @param payment 支付信息

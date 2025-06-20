@@ -1,8 +1,12 @@
 package com.example.demo.component;
 
 import com.example.demo.dto.Payment;
+import com.example.demo.log.ReconciliationLog;
+import com.example.demo.log.ReconciliationOrderLog;
 import com.example.demo.service.PaymentRecordService;
 import com.example.demo.service.PaymentService;
+import com.example.demo.service.ReconciliationOrderLogService;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -31,6 +35,9 @@ public class PaymentConsumer {
     @Autowired
     private PaymentRecordService paymentRecordService; // 注入 PaymentRecordService
 
+    @Autowired
+    private ReconciliationOrderLogService reconciliationOrderLogService; // 注入对账日志服务
+
     @RabbitListener(queues = "payment.queue") // 监听 payment.queue 队列 监听支付处理消息
     public void consume(Payment payment) {
         // 处理接收到的消息
@@ -45,13 +52,59 @@ public class PaymentConsumer {
         // 标记为已处理
         redisTemplate.opsForValue().set(key, "1", Duration.ofHours(1)); // 设置1小时过期时间
 
-        paymentRecordService.updateStatus(payment.getOrderId(), "PROCESSED"); // 更新支付状态
-
+        paymentRecordService.updateStatus(payment.getOrderId(), "PROCESSED_MQ"); // 更新支付状态
         // 模拟：记录日志
         log.info("[业务] 已处理订单: {} 金额: {}", payment.getOrderId(), payment.getAmount());
-
+        // [更新] 插入对账日志
+        ReconciliationOrderLog logEntry = new ReconciliationOrderLog();
+        String currentDate = java.time.LocalDateTime.now().toString();
+        logEntry.setDate(currentDate);
+        logEntry.setOrderId(payment.getOrderId());
+        logEntry.setLocalAmount(payment.getAmount());
+        logEntry.setRemoteAmount(payment.getAmount()); // 模拟一致
+        logEntry.setReason("正常对账");
+        // 保存对账日志
+        reconciliationOrderLogService.saveReconciliationLog(logEntry);
         // 模拟：发起第三方清算回调（可扩展为 FeignClient 调用）
         log.info("[回调] 模拟通知清算服务处理完成: 订单{}", payment.getOrderId());
 
+    }
+
+
+    // 监听成功队列"payment.success.queue"
+    @RabbitListener(queues = "payment.success.queue")
+    public void consumeSuccess(String orderId) {
+        // 处理接收到的成功消息
+        log.info("[MQ] 接收到支付成功消息: {}", orderId);
+        // 这里可以添加更多的业务逻辑来处理成功消息
+        String key = "payment:success:processed:" + orderId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            log.warn("订单 {} 已处理成功，忽略重复消息", orderId);
+            return;
+        }
+        // 标记为已处理成功
+        redisTemplate.opsForValue().set(key, "1", Duration.ofHours(1)); // 设置1小时过期时间
+
+        // 更新支付状态为成功
+        paymentRecordService.updateStatus(orderId, "SUCCESS");
+
+        // 模拟：记录日志
+        log.info("[业务] 已处理成功订单: {} 金额: {}", orderId);
+
+        // 查找最新的支付记录
+        Payment payment = paymentService.findByOrderId(orderId);
+
+        // [更新] 插入对账日志
+        ReconciliationOrderLog logEntry = new ReconciliationOrderLog();
+        // 对账日期
+        //  当前时间
+        String currentDate = java.time.LocalDateTime.now().toString();
+        logEntry.setDate(currentDate);
+        logEntry.setOrderId(payment.getOrderId());
+        logEntry.setLocalAmount(payment.getAmount());
+        logEntry.setRemoteAmount(payment.getAmount()); // 模拟一致
+        logEntry.setReason("正常对账");
+        // 保存对账日志
+        reconciliationOrderLogService.saveReconciliationLog(logEntry);
     }
 }

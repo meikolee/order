@@ -19,10 +19,38 @@ import java.util.Map;
 @Configuration
 public class RabbitConfig {
 
-
+    /**
+     * 创建一个支付队列的Bean
+     *
+     * @return Queue实例，用于处理支付相关的消息队列
+     */
     @Bean
     public Queue paymentQueue() {
         return new Queue("payment.queue", true);
+    }
+
+    /**
+     * 创建一个名为payment.success.queue的队列
+     * 该队列用于接收支付成功的消息
+     * 队列的第二个参数表示是否持久化消息如果支付成功的消息需要在RabbitMQ重启后仍然保留那么可以选择将该值设置为true
+     *
+     * @return 新创建的支付成功队列
+     */
+    @Bean
+    public Queue paymentSuccessQueue() {
+        return new Queue("payment.success.queue", true);
+    }
+    /**
+     * 创建一个绑定，用于将支付成功的消息队列与支付交换机进行连接
+     * 此绑定使得支付成功的消息能够被正确地路由到支付成功队列中
+     *
+     * @param paymentSuccessQueue 支付成功队列，用于接收支付成功的消息
+     * @param paymentExchange 支付交换机，用于路由支付相关的消息
+     * @return 返回一个绑定对象，它定义了队列与交换机之间的路由关系
+     */
+    @Bean
+    public Binding successBinding(Queue paymentSuccessQueue, DirectExchange paymentExchange) {
+        return BindingBuilder.bind(paymentSuccessQueue).to(paymentExchange).with("payment.success.process");
     }
 
     @Bean
