@@ -3,6 +3,7 @@ package com.example.demo.component;
 import com.example.demo.dto.Payment;
 import com.example.demo.log.ReconciliationLog;
 import com.example.demo.log.ReconciliationOrderLog;
+import com.example.demo.service.KafkaProducerService;
 import com.example.demo.service.PaymentRecordService;
 import com.example.demo.service.PaymentService;
 import com.example.demo.service.ReconciliationOrderLogService;
@@ -31,6 +32,9 @@ public class PaymentConsumer {
     // 这里可以添加方法来处理接收到的消息
     @Autowired
     private PaymentService paymentService;
+
+    @Autowired
+    private KafkaProducerService kafkaProducerService; // 注入 KafkaProducerService
 
     @Autowired
     private PaymentRecordService paymentRecordService; // 注入 PaymentRecordService
@@ -91,8 +95,12 @@ public class PaymentConsumer {
         // 模拟：记录日志
         log.info("[业务] 已处理成功订单: {} 金额: {}", orderId);
 
+
+
         // 查找最新的支付记录
         Payment payment = paymentService.findByOrderId(orderId);
+
+        kafkaProducerService.sendPayLog(payment);
 
         // [更新] 插入对账日志
         ReconciliationOrderLog logEntry = new ReconciliationOrderLog();
