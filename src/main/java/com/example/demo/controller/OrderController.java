@@ -20,6 +20,7 @@ public class OrderController {
     public ResponseEntity<String> createOrder(@RequestBody Payment payment) {
         // Logic to create an order
         // For demonstration, we will just call the payment service
+        payment.setStatus("CREATED"); // Set initial status to CREATED
         String paymentResponse = paymentService.processPayment(payment);
 
         return ResponseEntity.ok("Order created successfully. " + paymentResponse);

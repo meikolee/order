@@ -15,12 +15,13 @@ public class PaymentPublisher {
 
     public void publishPayment(Payment payment) {
         // 将支付信息发送到 RabbitMQ 队列
+        log.info("[MQ] 发布支付信息到 RabbitMQ 队列: {}", payment);
         rabbitTemplate.convertAndSend("payment.exchange","payment.process",payment);
     }
 
     /**
      * 发布支付信息到 RabbitMQ 队列，使用延迟队列
-     * @param payment
+     * @param payment 支付信息
      */
     public void publishPaymentWithDelay(Payment payment) {
         // 将支付信息发送到 RabbitMQ 队列

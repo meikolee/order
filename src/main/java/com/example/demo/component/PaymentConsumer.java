@@ -1,6 +1,7 @@
 package com.example.demo.component;
 
 import com.example.demo.dto.Payment;
+import com.example.demo.service.PaymentRecordService;
 import com.example.demo.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,9 @@ public class PaymentConsumer {
     @Autowired
     private PaymentService paymentService;
 
+    @Autowired
+    private PaymentRecordService paymentRecordService; // 注入 PaymentRecordService
+
     @RabbitListener(queues = "payment.queue") // 监听 payment.queue 队列 监听支付处理消息
     public void consume(Payment payment) {
         // 处理接收到的消息
@@ -41,8 +45,7 @@ public class PaymentConsumer {
         // 标记为已处理
         redisTemplate.opsForValue().set(key, "1", Duration.ofHours(1)); // 设置1小时过期时间
 
-        // 更新支付状态
-        paymentService.updateStatus(payment.getOrderId(), "PROCESSED");
+        paymentRecordService.updateStatus(payment.getOrderId(), "PROCESSED"); // 更新支付状态
 
         // 模拟：记录日志
         log.info("[业务] 已处理订单: {} 金额: {}", payment.getOrderId(), payment.getAmount());
