@@ -13,16 +13,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/order")
 public class OrderController {
 
+    /**
+     * 订单服务
+     */
     @Autowired
     private PaymentService paymentService;
 
+    /**
+     * 创建订单
+     *
+     * @param payment
+     * @return
+     */
     @PostMapping("/create")
     public ResponseEntity<String> createOrder(@RequestBody Payment payment) {
-        // Logic to create an order
-        // For demonstration, we will just call the payment service
-        payment.setStatus("CREATED"); // Set initial status to CREATED
+        payment.setStatus("CREATED");
         String paymentResponse = paymentService.processPayment(payment);
-
-        return ResponseEntity.ok("Order created successfully. " + paymentResponse);
+        return ResponseEntity.ok("订单创建成功 : " + paymentResponse);
     }
 }

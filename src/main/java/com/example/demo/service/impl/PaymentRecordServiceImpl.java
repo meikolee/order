@@ -2,6 +2,7 @@ package com.example.demo.service.impl;
 
 import com.example.demo.dto.Payment;
 import com.example.demo.log.ReconciliationOrderLog;
+import com.example.demo.service.CheckPaymentService;
 import com.example.demo.service.PaymentPublisher;
 import com.example.demo.service.PaymentRecordService;
 import com.example.demo.service.PaymentService;
@@ -20,6 +21,9 @@ public class PaymentRecordServiceImpl implements PaymentRecordService {
     @Autowired
     private PaymentPublisher paymentPublisher; // 注入 PaymentPublisher
 
+    @Autowired
+    private CheckPaymentService checkPaymentService;
+
     @Override
     @Transactional
     public void createPaymentRecord(Payment payment) {
@@ -29,10 +33,22 @@ public class PaymentRecordServiceImpl implements PaymentRecordService {
                     payment.getOrderId(), payment.getAmount(), payment.getCurrency(),
                     payment.getUserId(), payment.getStatus()
             );
-            // 确保成功才发布消息
-            paymentPublisher.publishPayment(payment);
-            log.info("[DB] 成功创建支付记录：orderId={}, amount={}, currency={}, userId={}, status={}",
-                    payment.getOrderId(), payment.getAmount(), payment.getCurrency(), payment.getUserId(), payment.getStatus());
+
+            // 查找订单 如果存在才发送消息
+            Payment order = checkPaymentService.findByOrderId(payment.getOrderId());
+
+            if (order != null) { //  TODO 验证事务是否已经自动提交commit 已验证已自动提交
+                log.info("[DB] 订单创建成功：orderId={}, amount={}, currency={}, userId={}, status={}",
+                        payment.getOrderId(), payment.getAmount(), payment.getCurrency(), payment.getUserId(), payment.getStatus());
+                // 确保成功才发布消息
+                paymentPublisher.publishPayment(payment);
+            } else {
+                log.warn("[DB] 未找到订单：orderId={}", payment.getOrderId());
+                // 抛出异常
+                throw new RuntimeException("订单创建失败");
+            }
+
+
         } catch (Exception e) {
             log.error("[DB] 创建支付记录失败：orderId={}, 错误信息={}", payment.getOrderId(), e.getMessage());
             throw e; // 抛出异常以触发事务回滚

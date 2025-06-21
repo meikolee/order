@@ -3,10 +3,7 @@ package com.example.demo.component;
 import com.example.demo.dto.Payment;
 import com.example.demo.log.ReconciliationLog;
 import com.example.demo.log.ReconciliationOrderLog;
-import com.example.demo.service.KafkaProducerService;
-import com.example.demo.service.PaymentRecordService;
-import com.example.demo.service.PaymentService;
-import com.example.demo.service.ReconciliationOrderLogService;
+import com.example.demo.service.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
@@ -31,7 +28,7 @@ public class PaymentConsumer {
     }
     // 这里可以添加方法来处理接收到的消息
     @Autowired
-    private PaymentService paymentService;
+    private CheckPaymentService checkPaymentService;
 
     @Autowired
     private KafkaProducerService kafkaProducerService; // 注入 KafkaProducerService
@@ -96,7 +93,7 @@ public class PaymentConsumer {
         log.info("[业务] 已处理成功订单: {} 金额: {}", orderId);
 
         // 查找最新的支付记录
-        Payment payment = paymentService.findByOrderId(orderId);
+        Payment payment = checkPaymentService.findByOrderId(orderId);
 
         // 最新的状态是SUCCESS 则入账
 
