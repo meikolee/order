@@ -1,11 +1,10 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.dto.Payment;
-import com.example.demo.log.ReconciliationOrderLog;
+import com.example.demo.dto.PaymentOrder;
 import com.example.demo.service.CheckPaymentService;
 import com.example.demo.service.PaymentPublisher;
 import com.example.demo.service.PaymentRecordService;
-import com.example.demo.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -81,8 +80,31 @@ public class PaymentRecordServiceImpl implements PaymentRecordService {
             log.error("[DB] 更新订单状态失败：orderId={}, status={}, 错误信息={}", orderId, status, e.getMessage());
             throw e; // 抛出异常以触发事务回滚
         }
+    }
 
 
+    @Override
+    @Transactional
+    public void updateOrderStatus(String orderId, String status) {
+        try {
+            int updated = jdbcTemplate.update(
+                    "UPDATE payment_order SET status = ? WHERE order_id = ?",
+                    status, orderId
+            );
+            if (updated > 0) {
+                // 查找订单 如果存在才发送消息
+                PaymentOrder order = checkPaymentService.findOrderByOrderId(orderId);
+                // 如果状态是 PAID 则发布到成功队列
+                if (order.getStatus().equals("MQUPDATE_CREATED_SUCCESS")) {
+                    log.info("[DB] 成功更新订单状态：orderId={}, status={}", orderId, status);
+                }
+            } else {
+                log.warn("[DB] 未找到订单：orderId={}, 期望更新为 status={}", orderId, status);
+            }
+        } catch (Exception e) {
+            log.error("[DB] 更新订单状态失败：orderId={}, status={}, 错误信息={}", orderId, status, e.getMessage());
+            throw e; // 抛出异常以触发事务回滚
+        }
     }
 
 

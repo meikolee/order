@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.Payment;
+import com.example.demo.dto.PaymentOrder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,13 @@ public class PaymentPublisher {
         log.info("[MQ] 发布支付信息到 RabbitMQ 队列: {}", payment);
         rabbitTemplate.convertAndSend("payment.exchange","payment.process",payment);
     }
+
+    public void publishNewOrder(PaymentOrder paymentOrder) {
+        // 将支付信息发送到 RabbitMQ 队列
+        log.info("[MQ] 发布创建订单到 RabbitMQ 队列: {}", paymentOrder);
+        rabbitTemplate.convertAndSend("payment.exchange","payment.order",paymentOrder);
+    }
+
 
     // 发布到成功队列
     public void publishPaymentSuccess(String orderId) {

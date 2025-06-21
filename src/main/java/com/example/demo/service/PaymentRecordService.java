@@ -10,4 +10,6 @@ public interface PaymentRecordService {
     @Transactional
     void updateStatus(String orderId, String status);
 
+    @Transactional
+    void updateOrderStatus(String orderId, String status);
 }

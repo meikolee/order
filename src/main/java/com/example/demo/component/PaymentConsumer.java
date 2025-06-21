@@ -1,6 +1,7 @@
 package com.example.demo.component;
 
 import com.example.demo.dto.Payment;
+import com.example.demo.dto.PaymentOrder;
 import com.example.demo.log.ReconciliationLog;
 import com.example.demo.log.ReconciliationOrderLog;
 import com.example.demo.service.*;
@@ -109,6 +110,45 @@ public class PaymentConsumer {
         logEntry.setLocalAmount(payment.getAmount());
         logEntry.setRemoteAmount(payment.getAmount()); // 模拟一致
         logEntry.setReason("正常对账");
+        // 保存对账日志
+        reconciliationOrderLogService.saveReconciliationLog(logEntry);
+    }
+
+    // 监听创建订单 payment.order
+    @RabbitListener(queues = "payment.order.queue")
+    public void consumeOrder(PaymentOrder paymentOrder) {
+        String orderId = paymentOrder.getOrderId();
+        // 处理接收到的成功消息
+        log.info("[MQ] 接收到创建订单消息消息: {}", paymentOrder);
+        // 这里可以添加更多的业务逻辑来处理成功消息
+        String key = "payment:order:processed:" + orderId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            log.warn("订单 {} 已处理成功，忽略重复消息", orderId);
+            return;
+        }
+        // 标记为已处理成功
+        redisTemplate.opsForValue().set(key, "1", Duration.ofHours(1)); // 设置1小时过期时间
+
+        // 更新支付状态为成功
+        paymentRecordService.updateOrderStatus(orderId, "MQUPDATE_CREATED_SUCCESS");
+
+        // 模拟：记录日志
+        log.info("[业务] 已处理成功订单: {} 金额: {}", orderId);
+
+        // 查找最新的支付记录
+        PaymentOrder paymentOrder1 = checkPaymentService.findOrderByOrderId(orderId);
+        // 最新的状态是SUCCESS 则入账
+        kafkaProducerService.sendOrderLog(paymentOrder1);
+        // [更新] 插入对账日志
+        ReconciliationOrderLog logEntry = new ReconciliationOrderLog();
+        // 对账日期
+        //  当前时间
+        String currentDate = java.time.LocalDateTime.now().toString();
+        logEntry.setDate(currentDate);
+        logEntry.setOrderId(paymentOrder.getOrderId());
+        logEntry.setLocalAmount(paymentOrder.getAmount());
+        logEntry.setRemoteAmount(paymentOrder.getAmount()); // 模拟一致
+        logEntry.setReason("创建订单");
         // 保存对账日志
         reconciliationOrderLogService.saveReconciliationLog(logEntry);
     }

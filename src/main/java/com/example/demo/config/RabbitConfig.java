@@ -30,6 +30,16 @@ public class RabbitConfig {
     }
 
     /**
+     * 创建一个支付订单队列
+     *
+     * @return Queue实例，用于处理支付订单的消息
+     */
+    @Bean
+    public Queue paymentOrderQueue() {
+        return new Queue("payment.order.queue", true);// true表示持久化消息
+    }
+
+    /**
      * 创建一个名为payment.success.queue的队列
      * 该队列用于接收支付成功的消息
      * 队列的第二个参数表示是否持久化消息如果支付成功的消息需要在RabbitMQ重启后仍然保留那么可以选择将该值设置为true
@@ -40,6 +50,12 @@ public class RabbitConfig {
     public Queue paymentSuccessQueue() {
         return new Queue("payment.success.queue", true);
     }
+
+    @Bean
+    public Binding paymentOrderBinding(Queue paymentOrderQueue, DirectExchange paymentExchange) {
+        return BindingBuilder.bind(paymentOrderQueue).to(paymentExchange).with("payment.order");
+    }
+
     /**
      * 创建一个绑定，用于将支付成功的消息队列与支付交换机进行连接
      * 此绑定使得支付成功的消息能够被正确地路由到支付成功队列中

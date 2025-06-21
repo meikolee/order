@@ -1,13 +1,11 @@
 package com.example.demo.service.impl;
 import com.example.demo.dto.Payment;
+import com.example.demo.dto.PaymentOrder;
 import com.example.demo.service.CheckPaymentService;
-import com.example.demo.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Service
 @Slf4j
@@ -44,5 +42,35 @@ public class CheckPaymentServiceImpl implements CheckPaymentService {
             log.warn("[DB] 未找到订单：orderId={}", orderId);
         }
         return payment;
+    }
+
+
+    /**
+     * @param orderId
+     * @return
+     */
+    @Override
+    public PaymentOrder findOrderByOrderId(String orderId) {
+        // 模拟从数据库中查找订单
+        log.info("[DB] 查找订单：orderId={}", orderId);
+        PaymentOrder paymentOrder = jdbcTemplate.queryForObject(
+                "SELECT * FROM payment_order WHERE order_id = ?",
+                new Object[]{orderId},
+                (rs, rowNum) -> {
+                    PaymentOrder p = new PaymentOrder();
+                    p.setOrderId(rs.getString("order_id"));
+                    p.setAmount(rs.getBigDecimal("amount"));
+                    p.setCurrency(rs.getString("currency"));
+                    p.setUserId(rs.getString("user_id"));
+                    p.setStatus(rs.getString("status"));
+                    return p;
+                }
+        );
+        if (paymentOrder != null) {
+            log.info("[DB] 找到订单：{}", paymentOrder);
+        } else {
+            log.warn("[DB] 未找到订单：orderId={}", orderId);
+        }
+        return paymentOrder;
     }
 }

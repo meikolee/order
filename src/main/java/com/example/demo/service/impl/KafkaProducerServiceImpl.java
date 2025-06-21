@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.dto.Payment;
+import com.example.demo.dto.PaymentOrder;
 import com.example.demo.service.KafkaProducerService;
 import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,18 @@ public class KafkaProducerServiceImpl implements KafkaProducerService {
         // 发送支付日志到 Kafka
         String topic = "pay-log"; // 假设有一个 Kafka 主题用于支付日志
         String json = new Gson().toJson(payment); // 将 Payment 对象转换为 JSON 字符串
+        kafkaTemplate.send(topic, json);
+        log.info("发送日志到 :  Kafka topic {}: {}", topic, json);
+    }
+
+    /**
+     * @param paymentOrder
+     */
+    @Override
+    public void sendOrderLog(PaymentOrder paymentOrder) {
+        // 发送支付日志到 Kafka
+        String topic = "order-log"; // 假设有一个 Kafka 主题用于支付日志
+        String json = new Gson().toJson(paymentOrder); // 将 Payment 对象转换为 JSON 字符串
         kafkaTemplate.send(topic, json);
         log.info("发送日志到 :  Kafka topic {}: {}", topic, json);
     }
