@@ -52,27 +52,20 @@ public class PaymentController {
             return ResponseEntity.ok("订单已支付，无需重复支付");
         }
 
-        //                // 发布到成功的消息队列
-        //                //Payment paymentLast = paymentService.findByOrderId(orderId);// 查找最新的支付记录
-        //                // 这里可以添加实际的支付处理逻辑
-        //                paymentPublisher.publishPaymentSuccess(orderId);
-
-// 如果是已支付状态，直接返回
+        // 如果是已支付状态，直接返回
         if ("PAID".equals(payment.getStatus())) {
             paymentPublisher.publishPaymentSuccess(orderId);
             return ResponseEntity.ok("确认订单中，订单号: " + orderId);
         }
 
-        payment.setStatus("PAID"); // 更新支付状态为已完成
         try {
             // 调用服务处理支付
+            payment.setStatus("PAID"); // 更新支付状态为已支付
             paymentRecordService.updateStatus(orderId, payment.getStatus());
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body("订单处理失败 : " + e.getMessage());
         }
-        Payment paymentLast = paymentService.findByOrderId(orderId);// 查找最新的支付记录
-        // 这里可以添加实际的支付处理逻辑
-        paymentPublisher.publishPayment(paymentLast);
         return ResponseEntity.ok("订单支付成功，订单号: " + orderId);
     }
 

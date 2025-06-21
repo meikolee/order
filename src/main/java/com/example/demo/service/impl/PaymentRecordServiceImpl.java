@@ -67,7 +67,13 @@ public class PaymentRecordServiceImpl implements PaymentRecordService {
                     status, orderId
             );
             if (updated > 0) {
-                log.info("[DB] 成功更新订单状态：orderId={}, status={}", orderId, status);
+                // 查找订单 如果存在才发送消息
+                Payment order = checkPaymentService.findByOrderId(orderId);
+                // 如果状态是 PAID 则发布到成功队列
+                if (order.getStatus().equals("PAID")) {
+                    log.info("[DB] 成功更新订单状态：orderId={}, status={}", orderId, status);
+                    paymentPublisher.publishPaymentSuccess(orderId);
+                }
             } else {
                 log.warn("[DB] 未找到订单：orderId={}, 期望更新为 status={}", orderId, status);
             }
