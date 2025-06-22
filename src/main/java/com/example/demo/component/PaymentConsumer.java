@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.time.Duration;
+import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
 // // [新增] 5. MQ 消费者逻辑
@@ -40,8 +42,15 @@ public class PaymentConsumer {
     @Autowired
     private ReconciliationOrderLogService reconciliationOrderLogService; // 注入对账日志服务
 
-    @RabbitListener(queues = "payment.queue") // 监听 payment.queue 队列 监听支付处理消息
+    @Resource // 这个注解是为了使用 Spring 提供的线程池
+    private Executor orderExecutor;
+
+    @RabbitListener(queues = "payment.queue", concurrency = "5") // 监听 payment.queue 队列 监听支付处理消息
     public void consume(Payment payment) {
+        orderExecutor.execute(() -> handlePayment(payment)); // 多线程执行
+    }
+
+    private void handlePayment(Payment payment) {
         // 处理接收到的消息
         log.info("[MQ] 接收到支付处理消息: {}", payment);
         // 这里可以添加更多的业务逻辑来处理消息
@@ -69,8 +78,8 @@ public class PaymentConsumer {
         reconciliationOrderLogService.saveReconciliationLog(logEntry);
         // 模拟：发起第三方清算回调（可扩展为 FeignClient 调用）
         log.info("[回调] 模拟通知清算服务处理完成: 订单{}", payment.getOrderId());
-
     }
+
 
 
     // 监听成功队列"payment.success.queue"
