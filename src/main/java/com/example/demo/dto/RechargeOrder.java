@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 public class RechargeOrder implements Serializable {
     private static final long serialVersionUID = 1L;// 序列化版本号
 
-    private String id; // 支付ID
+    private String id; // 支付ID               v   dgrxt     f
     private String orderId;
     private BigDecimal amount;
     private String currency;
