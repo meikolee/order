@@ -21,6 +21,7 @@ public class ExchangeController {
 
     @PostMapping("/convert")
     public ResponseEntity<BigDecimal> convert(@RequestBody ExchangeRequest request) {
+
         BigDecimal result = exchangeService.convertCurrency(request);
         return ResponseEntity.ok(result);
 

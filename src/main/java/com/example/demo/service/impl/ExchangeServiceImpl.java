@@ -9,6 +9,12 @@ import java.math.BigDecimal;
 @Service
 public class ExchangeServiceImpl implements com.example.demo.service.ExchangeService {
 
-    @Autowired
-    private ExchangeRateRepository rateRepo;
+    /**
+     * @param request
+     * @return
+     */
+    @Override
+    public BigDecimal convertCurrency(ExchangeRequest request) {
+        return null;
+    }
 }
