@@ -2,7 +2,6 @@ package com.example.demo.service.impl;
 
 import com.example.demo.log.ReconciliationLog;
 import com.example.demo.repository.AccountRepository;
-import com.example.demo.repository.ExchangeRateRepository;
 import com.example.demo.repository.ReconciliationRepository;
 import com.example.demo.service.ReconciliationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +13,6 @@ import java.math.BigDecimal;
 public class ReconciliationServiceImpl implements ReconciliationService {
     @Autowired
     private AccountRepository accountRepo;
-
-    @Autowired
-    private ReconciliationRepository reconciliationRepo;
 
     public void reconcile(String date, BigDecimal bankTotal) {
         // 模拟从账户中聚合总金额
