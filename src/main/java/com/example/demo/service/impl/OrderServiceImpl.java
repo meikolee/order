@@ -1,26 +1,23 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.dto.Payment;
 import com.example.demo.dto.PaymentOrder;
 import com.example.demo.service.CheckPaymentService;
 import com.example.demo.service.OrderService;
 import com.example.demo.service.PaymentPublisher;
-import com.example.demo.service.PaymentRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.UUID;
 
 @Slf4j
 @Service
 public class OrderServiceImpl implements OrderService {
-
-    @Autowired
-    private PaymentRecordService paymentRecordService;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -31,17 +28,25 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private PaymentPublisher paymentPublisher;
 
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+
     @Override
     @Transactional
     public String creatOrder(PaymentOrder paymentOrder) {
+        // 1 生成唯一订单号
         // 设置初始状态、生成订单号
-        String orderId = UUID.randomUUID().toString().replaceAll("-", "");
-        paymentOrder.setOrderId(orderId);
-        // 初始状态为 INIT
-        log.info("[DB] 1 创建订单 ：orderId={}, amount={}, currency={}, userId={}",
-                paymentOrder.getOrderId(), paymentOrder.getAmount(), paymentOrder.getCurrency(), paymentOrder.getUserId());
+        // 用uuid的好处是，不会重复，且长度固定,因为UUID.randomUUID().toString()返回的是字符串，所以用replaceAll("-", "")去掉-
+        String orderId = "ORD" + UUID.randomUUID().toString().replaceAll("-", "");
+
+        // 2 幂等控制 防止用户重复提交
+        String key = "order:idempotent:"+orderId;
+        redisTemplate.opsForValue().set(key, "1", Duration.ofMinutes(30)); // 设置30分钟的有效期
+
         try {
-            createPaymentRecord(paymentOrder); // 保存支付记录到数据库 事务不能通过this调用自身方法，
+            // 3 创建订单到数据库
+            paymentOrder.setOrderId(orderId);
+            createOrderRecord(paymentOrder);
             return "订单创建成功 : order: " + orderId;
         } catch (Exception e) {
             log.error("[DB] 支付处理失败：orderId={}, 错误信息={}", orderId, e.getMessage());
@@ -49,9 +54,8 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-
     @Override
-    public void createPaymentRecord(PaymentOrder paymentOrder) {
+    public void createOrderRecord(PaymentOrder paymentOrder) {
         try {
             String orderId = paymentOrder.getOrderId();
             BigDecimal amount = paymentOrder.getAmount();
@@ -64,7 +68,7 @@ public class OrderServiceImpl implements OrderService {
                     orderId, amount, currency, userId, status
             );
 
-            // 查找订单 如果存在才发送消息
+            // 4. 发送支付消息 用户获取到订单创建成功信息
             PaymentOrder order = checkPaymentService.findOrderByOrderId(paymentOrder.getOrderId());
 
             if (order != null) {

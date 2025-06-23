@@ -7,5 +7,5 @@ import org.springframework.transaction.annotation.Transactional;
 public interface OrderService {
     String creatOrder(PaymentOrder paymentOrder);
 
-    void createPaymentRecord(PaymentOrder paymentOrder);
+    void createOrderRecord(PaymentOrder paymentOrder);
 }

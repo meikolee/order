@@ -35,16 +35,19 @@ public class OrderController {
      */
     @PostMapping("/create")
     public ResponseEntity<String> createOrder(@RequestBody PaymentOrder paymentOrder) {
-        List<String> paymentResponse = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            paymentOrder.setStatus("CREATING");
-            try {
-                String orderId =orderService.creatOrder(paymentOrder);
-                paymentResponse.add(orderId);
-            }catch (Exception e) {
-                log.error("[DB] 订单创建失败：orderId={}, 错误信息={}", paymentOrder.getOrderId(), e.getMessage());
-            }
-        }
-        return ResponseEntity.ok("订单创建成功 : " + paymentResponse);
+
+        String paymentResponse = orderService.creatOrder(paymentOrder);
+
+        //        List<String> paymentResponse = new ArrayList<>();
+        //        for (int i = 0; i < 10; i++) {
+        //            paymentOrder.setStatus("CREATING");
+        //            try {
+        //                String orderId =orderService.creatOrder(paymentOrder);
+        //                paymentResponse.add(orderId);
+        //            }catch (Exception e) {
+        //                log.error("[DB] 订单创建失败：orderId={}, 错误信息={}", paymentOrder.getOrderId(), e.getMessage());
+        //            }
+        //        }
+        return ResponseEntity.ok(paymentResponse);
     }
 }
