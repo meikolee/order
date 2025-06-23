@@ -73,4 +73,15 @@ public class AccountServiceImpl implements AccountService {
         }
 
     }
+
+    /**
+     * @param userId
+     * @param amount
+     */
+    @Override
+    @Transactional
+    public void freeze(String userId, BigDecimal amount) {
+        // 检查用户余额
+        //
+    }
 }

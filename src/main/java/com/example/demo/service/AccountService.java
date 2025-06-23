@@ -9,4 +9,7 @@ public interface AccountService {
 
     // 提现
     void withdraw(String userId, BigDecimal amount);
+
+    // 冻结余额
+    void freeze(String userId, BigDecimal amount);
 }

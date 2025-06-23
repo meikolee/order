@@ -123,14 +123,18 @@ public class PaymentConsumer {
         reconciliationOrderLogService.saveReconciliationLog(logEntry);
     }
 
-    // 监听创建订单 payment.order
+    /**
+     * @ 监听创建订单事件
+     * @ param paymentOrder
+     */
     @RabbitListener(queues = "payment.order.queue")
     public void consumeOrder(PaymentOrder paymentOrder) {
+
+        // 5 接收到订单创建消息
         String orderId = paymentOrder.getOrderId();
-        // 处理接收到的成功消息
-        log.info("[MQ] 接收到创建订单消息消息: {}", paymentOrder);
-        // 这里可以添加更多的业务逻辑来处理成功消息
+        log.info("[MQ] 接收到订单创建成功的消息: {}", paymentOrder);
         String key = "payment:order:processed:" + orderId;
+
         if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
             log.warn("订单 {} 已处理成功，忽略重复消息", orderId);
             return;
@@ -138,14 +142,29 @@ public class PaymentConsumer {
         // 标记为已处理成功
         redisTemplate.opsForValue().set(key, "1", Duration.ofHours(1)); // 设置1小时过期时间
 
+        // 6 检查是否已经处理过
+        PaymentOrder paymentOrder1 = checkPaymentService.findOrderByOrderId(orderId);
+
+        if (!"INIT".equals(paymentOrder1.getStatus()))
+        {
+            log.warn("订单 {} 状态异常,跳过处理 {}", orderId, paymentOrder1.getStatus());
+            return;
+        }
+
+        // 7 用户风控检测 todo
+        //        if (riskControlService.isBlacklistedUser(paymentOrder.getUserId())) {
+        //            log.warn("用户 {} 被风控拦截", paymentOrder.getUserId());
+        //            paymentRecordService.updateOrderStatus(orderId, "RISK_REJECTED");
+        //            return;
+        //        }
+
         // 更新支付状态为成功
         paymentRecordService.updateOrderStatus(orderId, "MQUPDATE_CREATED_SUCCESS");
 
         // 模拟：记录日志
         log.info("[业务] 已处理成功订单: {} 金额: {}", orderId);
 
-        // 查找最新的支付记录
-        PaymentOrder paymentOrder1 = checkPaymentService.findOrderByOrderId(orderId);
+
         // 最新的状态是SUCCESS 则入账
         kafkaProducerService.sendOrderLog(paymentOrder1);
         // [更新] 插入对账日志

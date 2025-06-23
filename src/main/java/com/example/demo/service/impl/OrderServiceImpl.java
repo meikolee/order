@@ -46,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             // 3 创建订单到数据库
             paymentOrder.setOrderId(orderId);
+            paymentOrder.setStatus("INIT");
             createOrderRecord(paymentOrder);
             return "订单创建成功 : order: " + orderId;
         } catch (Exception e) {
@@ -68,13 +69,13 @@ public class OrderServiceImpl implements OrderService {
                     orderId, amount, currency, userId, status
             );
 
-            // 4. 发送支付消息 用户获取到订单创建成功信息
+
             PaymentOrder order = checkPaymentService.findOrderByOrderId(paymentOrder.getOrderId());
 
             if (order != null) {
                 log.info("[DB] 订单创建成功：orderId={}, amount={}, currency={}, userId={}, status={}",
                         order.getOrderId(), order.getAmount(), order.getCurrency(), order.getUserId(), order.getStatus());
-                // 确保成功才发布消息
+                // 4. 发送支付消息 用户获取到订单创建成功信息
                 paymentPublisher.publishNewOrder(paymentOrder);
             } else {
                 log.warn("[DB] 未找到订单：orderId={}", orderId);
