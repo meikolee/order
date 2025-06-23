@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ExchangeRequest;
+import com.example.demo.dto.ExchangeRateParams;
 import com.example.demo.service.ExchangeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +20,9 @@ public class ExchangeController {
     private ExchangeService exchangeService;
 
     @PostMapping("/convert")
-    public ResponseEntity<BigDecimal> convert(@RequestBody ExchangeRequest request) {
+    public ResponseEntity<BigDecimal> convert(@RequestBody ExchangeRateParams exchangeRateParams) {
 
-        BigDecimal result = exchangeService.convertCurrency(request);
+        BigDecimal result = exchangeService.convertCurrency(exchangeRateParams);
         return ResponseEntity.ok(result);
 
     }
