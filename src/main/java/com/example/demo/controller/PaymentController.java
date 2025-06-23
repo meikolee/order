@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.Payment;
+import com.example.demo.entity.Payment;
 import com.example.demo.service.PaymentPublisher;
 import com.example.demo.service.PaymentRecordService;
 import com.example.demo.service.PaymentService;

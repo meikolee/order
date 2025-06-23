@@ -1,6 +1,6 @@
 package com.example.demo.job;
 
-import com.example.demo.dto.Payment;
+import com.example.demo.entity.Payment;
 import com.google.gson.Gson;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;

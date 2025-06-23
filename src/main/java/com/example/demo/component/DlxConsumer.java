@@ -1,8 +1,7 @@
 package com.example.demo.component;
 
-import com.example.demo.dto.Payment;
+import com.example.demo.entity.Payment;
 import com.example.demo.service.PaymentPublisher;
-import com.example.demo.service.PaymentService;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

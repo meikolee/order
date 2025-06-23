@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.Payment;
-import com.example.demo.dto.PaymentOrder;
+import com.example.demo.entity.Payment;
+import com.example.demo.entity.PaymentOrder;
 
 public interface KafkaProducerService {
 

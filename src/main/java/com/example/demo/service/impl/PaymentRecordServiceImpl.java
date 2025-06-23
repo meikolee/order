@@ -1,7 +1,7 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.dto.Payment;
-import com.example.demo.dto.PaymentOrder;
+import com.example.demo.entity.Payment;
+import com.example.demo.entity.PaymentOrder;
 import com.example.demo.service.CheckPaymentService;
 import com.example.demo.service.PaymentPublisher;
 import com.example.demo.service.PaymentRecordService;

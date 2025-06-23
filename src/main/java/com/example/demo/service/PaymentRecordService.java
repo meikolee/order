@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.Payment;
-import com.example.demo.log.ReconciliationOrderLog;
+import com.example.demo.entity.Payment;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface PaymentRecordService {

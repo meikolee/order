@@ -1,8 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.Payment;
-import com.example.demo.dto.PaymentOrder;
-import org.springframework.transaction.annotation.Transactional;
+import com.example.demo.entity.PaymentOrder;
 
 public interface OrderService {
     String creatOrder(PaymentOrder paymentOrder);

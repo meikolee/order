@@ -1,23 +1,18 @@
 package com.example.demo.component;
 
-import com.example.demo.dto.Payment;
-import com.example.demo.dto.PaymentOrder;
-import com.example.demo.log.ReconciliationLog;
+import com.example.demo.entity.Payment;
+import com.example.demo.entity.PaymentOrder;
 import com.example.demo.log.ReconciliationOrderLog;
 import com.example.demo.service.*;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.concurrent.Executor;
-import java.util.logging.Logger;
 
 // // [新增] 5. MQ 消费者逻辑
 @Component
