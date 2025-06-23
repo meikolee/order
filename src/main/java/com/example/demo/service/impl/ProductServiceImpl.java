@@ -1,8 +1,7 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.dto.Product;
+import com.example.demo.entity.Product;
 import com.example.demo.mapper.ProductMapper;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
